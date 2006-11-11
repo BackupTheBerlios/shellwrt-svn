@@ -1,0 +1,9 @@
+Package: shellwrt
+Maintainer: oxo
+Section: utilities
+Depends:
+Priority: normal
+Description: A modular, extensible shell interface for OpenWrt.
+Source: 
+Version: 0.0-1
+Architecture: mipsel

@@ -1,0 +1,95 @@
+#!/bin/sh 
+#
+#doc#shellwrt.lib
+#doc#source this file
+#todo#allow ssh from Openwrt box to Openwrt box
+
+doc(){	#doc#simple search for #doc# and print
+        sed -n -e "/sed/d;/#doc#/{s/\(.*\))#doc#\(.*\)/\1 \2/;p}" $1
+}
+
+reboot(){				#doc#
+	MY_DEVICE=$1
+	ssh ${MY_DEVICE} reboot
+	return 0			#doc#
+}
+
+installpkg(){				#doc# install some packages
+	MY_DEVICE=$1			#doc#
+	shift				#doc#
+	MY_PACKAGES=$*			#doc#
+	for pack in ${MY_PACKAGES};do
+		ssh ${MY_DEVICE} ipkg install ${pack}
+		[ "$?" != "0" ] && return 1	#doc#
+	done
+	return 0			#doc#
+}
+getipfromarp(){			#doc#get the ip address from stdin
+	MY_ARP=$1
+	cut -f 1 -d ' '|grep ${MY_ARP}
+	return $?
+}
+
+fillarp(){			#doc#fill arp table in directly connected network
+	MY_DEVICE=$1		#doc#
+	MY_NETWORK=$2		#doc#just 255.255.255.0 supported ...
+
+	for ip in $(seq 1 254);do
+		ssh ${MY_DEVICE} ping -c 1 -q "${MY_NETWORK}.${ip}" 1>/dev/null 2>&1
+	done
+	return 0		#doc#
+}
+
+sharp(){			#doc#show arp table
+	MY_DEVICE=$1		#doc#
+	MY_DEVFILE='/proc/net/arp'
+
+	ssh ${MY_DEVICE} cat ${MY_DEVFILE}
+	return $?		#doc#
+}
+
+shwdsmac(){			#doc#show wds mac partners
+	MY_DEVICE=$1		#doc#
+ 	MY_NVRAMVAR='wl0_wds'	#doc#
+
+	ssh ${MY_DEVICE} /usr/sbin/nvram get ${MY_NVRAMVAR}
+	return $?		#doc#
+}
+
+getnvrams(){                    #doc#get interesting nvram variables
+        MY_DEVICE=$1            #doc#
+        shift			#doc#
+        MY_NVRAMS=$*            #doc#
+        for my_nvram in ${MY_NVRAMS};do
+                echo "${my_nvram}=$(ssh ${MY_DEVICE} /usr/sbin/nvram get ${my_nvram})"   #doc#device:nvram=value
+        done
+        return 0                #doc#nochecks
+}
+
+
+setupssh(){	#doc#scp public key to device
+	MY_DEVICE=$1
+	MY_PUBLICDIR=$2
+	MY_PUBLICFILE=$3
+	MY_DEVAUTDIR=$4
+	MY_DEVAUTFILE=$5
+
+	MY_PUBLIC="$2/$3"
+	MY_DEVAUT="$4/$5"
+
+        MY_TEMP='/tmp'
+	MY_SSHCMDS="
+		cp ${MY_DEVAUT} ${MY_TEMP}; 
+		cat ${MY_TEMP}/$3 >>${MY_TEMP}/$5;
+		sort -u ${MY_TEMP}/$5 >$4/$5;
+		chmod 0600 $4/$5;
+		"
+
+	scp ${MY_PUBLIC} ${MY_DEVICE}:${MY_TEMP}
+        ssh ${MY_DEVICE} ${MY_SSHCMDS} 
+	return $?	#doc#return $? from ssh cmd
+}
+
+{
+	return 0
+}

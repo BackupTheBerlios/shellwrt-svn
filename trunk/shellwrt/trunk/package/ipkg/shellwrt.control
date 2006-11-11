@@ -1,0 +1,6 @@
+Package: shellwrt
+Maintainer: Owen Brotherwood <oxo@users.berlios.de>
+Section: net
+Depends: 
+Priority: normal
+Description: A shell interface for OpenWrt.

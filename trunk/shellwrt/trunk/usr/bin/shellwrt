@@ -1,0 +1,100 @@
+#!/bin/sh
+# 
+# shellwrt			#doc#
+# 
+# v000
+#
+
+MY_PROGRAM=$0			
+MY_DEVICE="$1"			#doc#devices like root@192.168.1.1 
+
+MY_UNAME=$(uname -a)
+MY_SHELL=${SHELL}
+
+MY_ROOT="$HOME/src/shellwrt/"
+MY_LIBDIR="${MY_ROOT}usr/lib/shellwrt"
+MY_LIBFILES='shellwrtlib'
+
+MY_PACKAGES='
+	kmod-usb2
+	kmod-usb-storage
+	kmod-vfat
+	kmod-usb-printer
+	p910nd
+	'
+MY_PUBLICDIR="$HOME/.ssh"
+MY_PUBLICFILE='id_dsa.pub'
+MY_DEVAUTDIR='.ssh'
+MY_DEVAUTFILE='authorized_keys2'
+
+
+sourcelibs() {			#doc#source the libs used
+	MY_LIBDIR=$1		#doc#
+	shift			#doc#
+	MY_LIBFILES=$*		#doc#
+	for lib in ${MY_LIBFILES};do
+		source ${MY_LIBDIR}/${lib}
+        done
+	return 0		#doc#no checks
+}
+
+help()				#doc#call doc
+{
+	doc $1
+	return 0
+}
+
+{
+	sourcelibs ${MY_LIBDIR} ${MY_LIBFILES}
+
+	my_device=${MY_DEVICE}
+	while read cmd para1 para2; do
+		my_device=${para1:-${my_device}}
+		[ "${my_device}" = '' ] && continue
+		echo "#${my_device}"
+		case $cmd in	#doc#read from stdin
+			ssh)	#doc#ssh ...
+				ssh ${my_device} ${para2}
+			;;
+			ipkgupdate)	#doc#update the repository
+				ssh ${my_device} ipkg update
+			;;
+			ping)	#doc#try and fill arp
+				ssh ${my_device} ping -c 2 ${para2}	#doc#NEED device and para: no check
+			;;
+			setupssh)	#doc#setup ssh authorized_hosts
+				setupssh ${my_device} ${MY_PUBLICDIR} ${MY_PUBLICFILE} ${MY_DEVAUTDIR} ${MY_DEVAUTFILE}
+			;;
+			getnvrams)	#doc#get interesting nvram variables
+				getnvrams ${my_device} 'boardtype'	
+			;;
+			installpkg)	#doc#ipkg
+				installpkg ${my_device} ${MY_PACKAGES}
+			;;
+			sharp)	sharp ${my_device}
+			;;
+			shwdsmac)	#doc#show wds macs
+				shwdsmac ${my_device}
+			;;
+			backports)	#doc#add backport without checks
+				ssh ${my_device} '
+					rm /etc/ipkg.conf
+					cp /rom/etc/ipkg.conf /etc/ipkg.conf
+					echo 'src backports http://downloads.openwrt.org/backports/rc5'>>/etc/ipkg.conf
+					'	
+			;;
+			reboot) #doc#reboot
+				reboot ${my_device}
+			;;
+			quit)	#doc#quit
+				exit 0
+			;;
+			[?h])	#doc#help
+				help ${MY_PROGRAM}
+			;;
+			*)	#doc#help
+				help ${MY_PROGRAM}
+			;;
+		esac
+	done
+}

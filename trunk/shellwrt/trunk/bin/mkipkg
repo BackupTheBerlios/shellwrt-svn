@@ -1,0 +1,9 @@
+#!/bin/bash
+CONTROL='control postinst  preinst'
+DATA='usr'
+
+tar zcfv ipkg/data.tar.gz ${DATA}
+cd ipkg
+tar zcfv control.tar.gz ${CONTROL}
+tar zcfv shellwrt.ipk debian-binary control.tar.gz data.tar.gz
+

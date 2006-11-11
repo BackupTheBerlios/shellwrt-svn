@@ -1,0 +1,5 @@
+config BR2_PACKAGE_SHELLWRT
+	tristate "shellwrt - shell interface for OpenWrt"
+	default y
+	help
+	  A shell interface for configuring OpenWrt
