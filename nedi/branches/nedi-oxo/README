@@ -74,6 +74,8 @@ This PHP script is generated on the fly. If you don't see after using the map fe
 2) I get errors retrieving the ports on Cat3500XL or Cat29x0 using IOS Version 12.0(5), what's wrong?
 There seems to be a bug with the bridge mib in this version. Try upgrading the IOS.
 
+oxo: the dot1 mibs need a sleep time: so after each access wait 9 sec and then you can ask again
+
 3) How about uniqueness of MAC addresses and vlans?
 Due to the fact that NeDi now supports different vendors, it's quite impossible to assign vlans to MAC addresses and vtp domains to vlans. Therefore MAC addresses are always unique and Vlans won't be bound to VTP domains.
 
